@@ -20,7 +20,10 @@ namespace FileUploadSample
 
     public class Query : ObjectGraphType
     {
-
+        public Query()
+        {
+            Field<StringGraphType>("hello", resolve: ctx => "hi :)");
+        }
     }
 
     public class Mutation : ObjectGraphType

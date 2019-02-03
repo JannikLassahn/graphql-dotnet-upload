@@ -2,10 +2,8 @@
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
 using GraphQL.Types;
-using GraphQL.Upload.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FileUploadSample
@@ -16,13 +14,12 @@ namespace FileUploadSample
         {
             services.AddSingleton<IDependencyResolver>(s => new FuncDependencyResolver(s.GetRequiredService));
 
-            services.AddSingleton<UploadGraphType>();
-
             services.AddSingleton<ISchema, SampleSchema>();
             services.AddSingleton<Query>();
             services.AddSingleton<Mutation>();
             services.AddSingleton<FileGraphType>();
 
+            services.AddGraphQLUpload();
             services.AddGraphQL(_ =>
             {
                 _.ExposeExceptions = true;
@@ -36,7 +33,9 @@ namespace FileUploadSample
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseMiddleware<GraphQLMultipartMiddleware<ISchema>>(new PathString("/graphql"));
+            // register the middleware that can handle multipart requests first
+            app.UseGraphQLUpload<ISchema>();
+
             app.UseGraphQL<ISchema>();
             app.UseGraphQLPlayground(new GraphQLPlaygroundOptions
             {
