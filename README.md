@@ -16,7 +16,7 @@ curl localhost:54234/graphql ^
 Bash:
 ```shell
 curl localhost:54234/graphql \
-  -F operations='{ "query": "mutation ($file: Upload!) { singleUpload(file: $file) { id } }", "variables": { "file": null } }' \
+  -F operations='{ "query": "mutation ($file: Upload!) { singleUpload(file: $file) { name } }", "variables": { "file": null } }' \
   -F map='{ "0": ["variables.file"] }' \
   -F 0=@a.txt
 ```
