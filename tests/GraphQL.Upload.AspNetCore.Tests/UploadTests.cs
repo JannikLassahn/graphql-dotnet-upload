@@ -1,5 +1,4 @@
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -97,13 +96,6 @@ namespace GraphQL.Upload.AspNetCore.Tests
                 response.EnsureSuccessStatusCode();
                 Assert.Contains(@"[{""data"":{""singleUpload"":""a.txt""}},{""data"":{""multipleUpload"":""b.txt,c.txt""}}]", await response.Content.ReadAsStringAsync());
             }
-        }
-
-        private static ByteArrayContent CreatePlainTextFile(string fileContent)
-        {
-            var content = new ByteArrayContent(Encoding.UTF8.GetBytes(fileContent));
-            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/plain");
-            return content;
         }
     }
 }
