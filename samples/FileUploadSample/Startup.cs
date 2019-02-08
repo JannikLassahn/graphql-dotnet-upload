@@ -12,6 +12,8 @@ namespace FileUploadSample
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<UploadRepository>();
+
             services.AddSingleton<IDependencyResolver>(s => new FuncDependencyResolver(s.GetRequiredService));
 
             services.AddSingleton<ISchema, SampleSchema>();
@@ -24,6 +26,8 @@ namespace FileUploadSample
             {
                 _.ExposeExceptions = true;
             });
+
+            services.AddCors();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -32,6 +36,13 @@ namespace FileUploadSample
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseStaticFiles();
+
+            app.UseCors(b => b
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader());
 
             // register the middleware that can handle multipart requests first
             app.UseGraphQLUpload<ISchema>();

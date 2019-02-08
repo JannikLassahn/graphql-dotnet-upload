@@ -1,8 +1,10 @@
-﻿
-using GraphQL;
+﻿using GraphQL;
 using GraphQL.Types;
 using GraphQL.Upload.AspNetCore;
 using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace FileUploadSample
 {
@@ -11,8 +13,6 @@ namespace FileUploadSample
         public SampleSchema(IDependencyResolver resolver)
             : base(resolver)
         {
-            RegisterValueConverter(new FormFileConverter());
-
             Query = resolver.Resolve<Query>();
             Mutation = resolver.Resolve<Mutation>();
         }
@@ -20,15 +20,15 @@ namespace FileUploadSample
 
     public class Query : ObjectGraphType
     {
-        public Query()
+        public Query(UploadRepository uploads)
         {
-            Field<StringGraphType>("hello", resolve: ctx => "hi :)");
+            Field<ListGraphType<FileGraphType>>("uploads", resolve: ctx => uploads.Files);
         }
     }
 
     public class Mutation : ObjectGraphType
     {
-        public Mutation()
+        public Mutation(UploadRepository uploads)
         {
             Field<FileGraphType>(
                 "singleUpload",
@@ -37,24 +37,37 @@ namespace FileUploadSample
                 resolve: context =>
                 {
                     var file = context.GetArgument<IFormFile>("file");
-                    return new File { Name = file.FileName, ContentType = file.ContentType };
+                    return uploads.Save(file);
+                });
+
+            Field<ListGraphType<FileGraphType>>(
+                "multipleUpload",
+                arguments: new QueryArguments(
+                    new QueryArgument<ListGraphType<UploadGraphType>> { Name = "files" }),
+                resolve: context =>
+                {
+                    var files = context.GetArgument<IEnumerable<IFormFile>>("files");
+                    return Task.WhenAll(files.Select(file => uploads.Save(file)));
                 });
         }
-
     }
 
     public class File
     {
+        public string Id { get; set; }
         public string Name { get; set; }
-        public string ContentType { get; set; }
+        public string MimeType { get; set; }
+        public string Path { get; set; }
     }
 
     public class FileGraphType : ObjectGraphType<File>
     {
         public FileGraphType()
         {
-            Field(f => f.Name);
-            Field(f => f.ContentType);
+            Field(f => f.Id).Name("id");
+            Field(f => f.Name).Name("filename");
+            Field(f => f.MimeType).Name("mimetype");
+            Field(f => f.Path).Name("path");
         }
     }
 }
