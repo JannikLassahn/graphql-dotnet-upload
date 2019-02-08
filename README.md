@@ -29,19 +29,7 @@ public void Configure(IApplicationBuilder app)
 }
 ```
 
-Register the converter in your schema.
-```csharp
-public class MySchema : Schema
-{
-  public MySchema()
-  {
-    RegisterValueConverter(new FormFileConverter());
-    // ...
-  }
-}
-```
-
-Finally, use the upload scalar in your resolvers. Files are exposed as `IFormFile`. 
+Use the upload scalar in your resolvers. Files are exposed as `IFormFile`. 
 ```csharp
 Field<StringGraphType>(
     "singleUpload",

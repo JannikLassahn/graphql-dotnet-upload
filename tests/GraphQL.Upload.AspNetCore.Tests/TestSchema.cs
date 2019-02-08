@@ -9,8 +9,6 @@ namespace GraphQL.Upload.AspNetCore.Tests
     {
         public TestSchema()
         {
-            RegisterValueConverter(new FormFileConverter());
-
             Query = new Query();
             Mutation = new Mutation();
         }

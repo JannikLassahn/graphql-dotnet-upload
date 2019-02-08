@@ -40,6 +40,13 @@ namespace Microsoft.AspNetCore.Builder
             if (options is null)
                 throw new ArgumentNullException(nameof(options));
 
+            var schema = (TSchema)builder.ApplicationServices.GetService(typeof(TSchema));
+
+            if (schema == null)
+                throw new ArgumentException($"No service type for {typeof(TSchema).FullName} registered.");
+
+            schema.RegisterValueConverter(new FormFileConverter());
+
             return builder.UseWhen(context => context.Request.Path.StartsWithSegments(path), branch => branch.UseMiddleware<GraphQLUploadMiddleware<ISchema>>(options));
         }
     }
