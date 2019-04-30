@@ -1,4 +1,7 @@
-﻿namespace GraphQL.Upload.AspNetCore
+﻿using System;
+using Microsoft.AspNetCore.Http;
+
+namespace GraphQL.Upload.AspNetCore
 {
     /// <summary>
     /// Options for <see cref="GraphQLUploadMiddleware{TSchema}"/>.
@@ -14,5 +17,10 @@
         /// The maximum allowed amount of files. Null indicates no limit at all.
         /// </summary>
         public long? MaximumFileCount { get; set; }
+
+        /// <summary>
+        /// Gets or sets the user context factory.
+        /// </summary>
+        public Func<HttpContext, object> UserContextFactory { get; set; }
     }
 }

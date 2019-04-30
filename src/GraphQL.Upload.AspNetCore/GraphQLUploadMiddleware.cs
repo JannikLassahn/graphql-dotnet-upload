@@ -90,7 +90,8 @@ namespace GraphQL.Upload.AspNetCore
                     Schema = schema,
                     Query = request.Query,
                     OperationName = request.OperationName,
-                    Inputs = request.GetInputs()
+                    Inputs = request.GetInputs(),
+                    UserContext = _options.UserContextFactory?.Invoke(context)
                 }
             )));
 
