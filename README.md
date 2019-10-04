@@ -29,7 +29,7 @@ public void Configure(IApplicationBuilder app)
 }
 ```
 
-Register within your MySchema.cs
+Register within your MySchema.cs.
 ```c#
 public class MySchema : Schema
 {
