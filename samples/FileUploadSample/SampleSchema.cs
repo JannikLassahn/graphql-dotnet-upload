@@ -15,6 +15,7 @@ namespace FileUploadSample
         {
             Query = resolver.Resolve<Query>();
             Mutation = resolver.Resolve<Mutation>();
+            RegisterValueConverter(new FormFileConverter());
         }
     }
 
