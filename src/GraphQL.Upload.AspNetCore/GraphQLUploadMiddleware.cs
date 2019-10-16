@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 namespace GraphQL.Upload.AspNetCore
 {
     public class GraphQLUploadMiddleware<TSchema>
-           where TSchema : ISchema
+               where TSchema : ISchema
     {
         private const string SpecUrl = "https://github.com/jaydenseric/graphql-multipart-request-spec";
 
@@ -81,7 +81,7 @@ namespace GraphQL.Upload.AspNetCore
 
             var executer = context.RequestServices.GetRequiredService<IDocumentExecuter>();
             var writer = context.RequestServices.GetRequiredService<IDocumentWriter>();
-            var schema = context.RequestServices.GetRequiredService<ISchema>();
+            var schema = context.RequestServices.GetRequiredService<TSchema>();
 
             var results = await Task.WhenAll(
                 requests.Select(request => executer.ExecuteAsync(new ExecutionOptions
