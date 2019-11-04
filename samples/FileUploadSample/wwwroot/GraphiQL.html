@@ -1,0 +1,245 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            height: 100%;
+            margin: 0;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        #graphiql {
+            height: 100vh;
+        }
+    </style>
+
+    <!--
+      This GraphiQL example depends on Promise and fetch, which are available in
+      modern browsers, but can be "polyfilled" for older browsers.
+      GraphiQL itself depends on React DOM.
+      If you do not want to rely on a CDN, you can host these files locally or
+      include them directly in your favored resource bunder.
+    -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-promise/4.1.1/es6-promise.auto.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/16.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.2.0/umd/react-dom.production.min.js"></script>
+
+    <!--
+      These two files can be found in the npm module, however you may wish to
+      copy them directly into your environment, or perhaps include them in your
+      favored resource bundler.
+     -->
+    <link rel="stylesheet" href="graphiql.css" />
+    <script src="graphiql.js"></script>
+
+    <script src="https://unpkg.com/subscriptions-transport-ws@0.8.3/browser/client.js"></script>
+    <script src="https://unpkg.com/graphiql-subscriptions-fetcher@0.0.2/browser/client.js"></script>
+
+</head>
+<body>
+    <div id="graphiql">Loading...</div>
+    <script>
+
+        /**
+         * This GraphiQL example illustrates how to use some of GraphiQL's props
+         * in order to enable reading and updating the URL parameters, making
+         * link sharing of queries a little bit easier.
+         *
+         * This is only one example of this kind of feature, GraphiQL exposes
+         * various React params to enable interesting integrations.
+         */
+
+        // Parse the search string to get url parameters.
+        var search = window.location.search;
+        var parameters = {};
+        search.substr(1).split('&').forEach(function (entry) {
+            var eq = entry.indexOf('=');
+            if (eq >= 0) {
+                parameters[decodeURIComponent(entry.slice(0, eq))] =
+                    decodeURIComponent(entry.slice(eq + 1));
+            }
+        });
+
+        // if variables was provided, try to format it.
+        if (parameters.variables) {
+            try {
+                parameters.variables =
+                    JSON.stringify(JSON.parse(parameters.variables), null, 2);
+            } catch (e) {
+                // Do nothing, we want to display the invalid JSON as a string, rather
+                // than present an error.
+            }
+        }
+
+        // When the query and variables string is edited, update the URL bar so
+        // that it can be easily shared
+        function onEditQuery(newQuery) {
+            parameters.query = newQuery;
+            updateURL();
+        }
+
+        function onEditVariables(newVariables) {
+            parameters.variables = newVariables;
+            updateURL();
+        }
+
+        function onEditOperationName(newOperationName) {
+            parameters.operationName = newOperationName;
+            updateURL();
+        }
+
+        function updateURL() {
+            var newSearch = '?' + Object.keys(parameters).filter(function (key) {
+                return Boolean(parameters[key]);
+            }).map(function (key) {
+                return encodeURIComponent(key) + '=' +
+                    encodeURIComponent(parameters[key]);
+            }).join('&');
+            history.replaceState(null, null, newSearch);
+        }
+
+        function extractFiles(value, path) {
+            path = path || '';
+            let clone
+            const files = new Map()
+
+
+            function addFile(paths, file) {
+                const storedPaths = files.get(file)
+                if (storedPaths) storedPaths.push(...paths)
+                else files.set(file, paths)
+            }
+
+            if (
+                (typeof File !== 'undefined' && value instanceof File) ||
+                (typeof Blob !== 'undefined' && value instanceof Blob)
+            ) {
+                clone = null
+                addFile([path], value)
+            } else {
+                const prefix = path ? `${path}.` : ''
+
+                if (typeof FileList !== 'undefined' && value instanceof FileList)
+                    clone = Array.prototype.map.call(value, (file, i) => {
+                        addFile([`${prefix}${i}`], file)
+                        return null
+                    })
+                else if (Array.isArray(value))
+                    clone = value.map((child, i) => {
+                        const result = extractFiles(child, `${prefix}${i}`)
+                        result.files.forEach(addFile)
+                        return result.clone
+                    })
+                else if (value && value.constructor === Object) {
+                    clone = {}
+                    for (const i in value) {
+                        const result = extractFiles(value[i], `${prefix}${i}`)
+                        result.files.forEach(addFile)
+                        clone[i] = result.clone
+                    }
+                } else clone = value
+            }
+
+            return { clone, files }
+        }
+
+        // Defines a GraphQL fetcher using the fetch API.
+        const graphQLEndpoint = window.location.protocol + '//' + window.location.host + '/graphql';
+        function graphQLFetcher(graphQLParams) {
+
+            var options;
+
+            if (!graphQLParams.files || graphQLParams.files.length === 0)
+                options = {
+                    method: 'post',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(graphQLParams),
+                    credentials: 'same-origin',
+                };
+            else {
+
+
+                // merge query, variables and files
+
+                var operation = {
+                    query: graphQLParams.query,
+                    variables: graphQLParams.variables || {}
+                };
+
+                graphQLParams.files.forEach(file => {
+                    operation.variables[file.name] = file.data;
+                });
+
+                // use extract-files (source: https://github.com/jaydenseric/extract-files)
+
+                var { clone, files } = extractFiles(operation);
+                var operationJSON = JSON.stringify(clone);
+
+                var formData = new FormData();
+                formData.append('operations', operationJSON)
+                const map = {}
+                let i = 0
+                files.forEach(paths => {
+                    map[++i] = paths
+                })
+                formData.append('map', JSON.stringify(map))
+
+                i = 0
+                files.forEach((paths, file) => {
+                    formData.append(`${++i}`, file, file.name)
+                })
+
+                var options = {
+                    method: 'post',
+                    body: formData,
+                    credentials: 'same-origin',
+                };
+            }
+            return fetch(graphQLEndpoint, options)
+                .then(function (response) {
+                    return response.text();
+                }).then(function (responseBody) {
+                    try {
+                        return JSON.parse(responseBody);
+                    } catch (error) {
+                        return responseBody;
+                    }
+                });
+        }
+        const subscriptionsEndpoint = graphQLEndpoint.replace(/^http/, "ws");
+        const subscriptionsClient =
+            new window.SubscriptionsTransportWs.SubscriptionClient(
+                subscriptionsEndpoint,
+                {
+                    reconnect: true
+                }
+            );
+        const graphQLFetcherWithSubscriptions =
+            window.GraphiQLSubscriptionsFetcher.graphQLFetcher(
+                subscriptionsClient,
+                graphQLFetcher
+            );
+
+        // Render <GraphiQL /> into the body.
+        ReactDOM.render(
+            React.createElement(GraphiQL, {
+                fetcher: graphQLFetcherWithSubscriptions,
+                query: parameters.query,
+                variables: parameters.variables,
+                operationName: parameters.operationName,
+                onEditQuery: onEditQuery,
+                onEditVariables: onEditVariables,
+                onEditOperationName: onEditOperationName,
+                docExplorerOpen: true
+            }),
+            document.getElementById('graphiql')
+        );
+    </script>
+</body>
+</html>
