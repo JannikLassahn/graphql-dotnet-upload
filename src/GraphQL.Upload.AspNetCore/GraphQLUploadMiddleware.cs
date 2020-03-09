@@ -1,87 +1,97 @@
-﻿using GraphQL.Http;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using GraphQL.Types;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GraphQL.Upload.AspNetCore
 {
     public class GraphQLUploadMiddleware<TSchema>
-               where TSchema : ISchema
+        where TSchema : ISchema
     {
-        private const string SpecUrl = "https://github.com/jaydenseric/graphql-multipart-request-spec";
-
+        private const string DOCS_URL = "See: https://github.com/jaydenseric/graphql-Upload-request-spec.";
+        private readonly ILogger _logger;
         private readonly RequestDelegate _next;
         private readonly GraphQLUploadOptions _options;
+        private readonly IGraphQLUploadRequestDeserializer _requestDeserializer;
 
-        public GraphQLUploadMiddleware(RequestDelegate next, GraphQLUploadOptions options)
+        public GraphQLUploadMiddleware(ILogger<GraphQLUploadMiddleware<TSchema>> logger, RequestDelegate next,
+            GraphQLUploadOptions options, IGraphQLUploadRequestDeserializer requestDeserializer)
         {
-            _next = next ?? throw new ArgumentException(nameof(next));
-            _options = options ?? throw new ArgumentException(nameof(options));
+            _logger = logger;
+            _next = next ?? throw new ArgumentNullException(nameof(next));
+            _options = options;
+            _requestDeserializer = requestDeserializer;
         }
 
         public async Task InvokeAsync(HttpContext context)
         {
-            if (!IsMultipartGraphQLRequest(context))
+            if (!context.Request.HasFormContentType)
             {
-                await _next.Invoke(context);
+                await _next(context);
                 return;
             }
 
-            var forms = await context.Request.ReadFormAsync();
+            // Handle requests as per recommendation at http://graphql.org/learn/serving-over-http/
+            // Inspiration: https://github.com/graphql/express-graphql/blob/master/src/index.js
+            var httpRequest = context.Request;
+            var httpResponse = context.Response;
 
-            // validate file count
-            if (_options.MaximumFileCount.HasValue &&
-                _options.MaximumFileCount < forms.Files.Count)
+            var writer = context.RequestServices.GetRequiredService<IDocumentWriter>();
+            var cancellationToken = GetCancellationToken(context);
+
+            // GraphQL HTTP only supports GET and POST methods
+            bool isPost = HttpMethods.IsPost(httpRequest.Method);
+            if (!isPost)
             {
-                await WriteStatusCodeWithMessage(context, 413, $"{_options.MaximumFileCount} file uploads exceeded.");
+                httpResponse.Headers["Allow"] = "POST";
+                await WriteErrorResponseAsync(httpResponse, writer,
+                    $"Invalid HTTP method. Only POST are supported. {DOCS_URL}",
+                    httpStatusCode: 405 // Method Not Allowed
+                );
                 return;
             }
 
-            // validate file size
-            if(_options.MaximumFileSize.HasValue)
-            {
-                foreach (var file in forms.Files)
-                {
-                    if(file.Length > _options.MaximumFileSize)
-                    {
-                        await WriteStatusCodeWithMessage(context, 413, "File size limit exceeded.");
-                        return;
-                    }
-                }
-            }
+            var form = await context.Request.ReadFormAsync();
 
-            if(!forms.TryGetValue("operations", out var operationsJson))
+            int statusCode = 400;
+            string error;
+            GraphQLUploadRequestDeserializationResult uploadRequest;
+            IFormFileCollection files;
+            List<GraphQLUploadRequest> requests;
+
+            try
             {
-                await WriteStatusCodeWithMessage(context, 400, $"Missing field 'operations' ({SpecUrl}).");
+                uploadRequest = _requestDeserializer.DeserializeFromFormCollection(form);
+            }
+            catch(Exception exception)
+            {
+                await WriteErrorResponseAsync(httpResponse, writer, $"{exception.Message} ${DOCS_URL}", statusCode);
                 return;
             }
 
-            if(!forms.TryGetValue("map", out var mapJson))
+            (files, error, statusCode) = GetFiles(form);
+            if (error != null)
             {
-                await WriteStatusCodeWithMessage(context, 400, $"Missing field 'map' ({SpecUrl}).");
+                await WriteErrorResponseAsync(httpResponse, writer, error, statusCode);
                 return;
             }
 
-            (var requests, var error) = ExtractGraphQLRequests(operationsJson, mapJson, forms);
+            (requests, error) = ExtractGraphQLRequests(uploadRequest, form);
             if(error != null)
             {
-                await WriteStatusCodeWithMessage(context, 400, error);
+                await WriteErrorResponseAsync(httpResponse, writer, error, statusCode);
                 return;
             }
 
             var executer = context.RequestServices.GetRequiredService<IDocumentExecuter>();
-            var writer = context.RequestServices.GetRequiredService<IDocumentWriter>();
             var schema = context.RequestServices.GetRequiredService<TSchema>();
+
+            var test = requests.First().Variables.ToInputs();
 
             var results = await Task.WhenAll(
                 requests.Select(request => executer.ExecuteAsync(new ExecutionOptions
@@ -91,122 +101,22 @@ namespace GraphQL.Upload.AspNetCore
                     Query = request.Query,
                     OperationName = request.OperationName,
                     Inputs = request.GetInputs(),
-                    UserContext = _options.UserContextFactory?.Invoke(context)
-                }
-            )));
+                    UserContext = _options.UserContextFactory?.Invoke(context),
+                })));
 
-            await WriteResponsesAsync(context, writer, results);
+            await WriteResponseAsync(context, writer, results);
         }
 
+        protected virtual CancellationToken GetCancellationToken(HttpContext context) => context.RequestAborted;
 
-        private static bool IsMultipartGraphQLRequest(HttpContext context)
+        private static GraphQLUploadRequest CreateGraphQLRequest(GraphQLUploadRequest operation, Dictionary<int, List<GraphQLUploadFileMap>> metaLookup, int index)
         {
-            return context.Request.HasFormContentType;
-        }
-
-        private static Task WriteStatusCodeWithMessage(HttpContext context, int code, string message)
-        {
-            context.Response.StatusCode = code;
-            return context.Response.WriteAsync(message);
-        }
-
-        private async Task WriteResponsesAsync(HttpContext context, IDocumentWriter writer, ExecutionResult[] results)
-        {
-            context.Response.ContentType = "application/json";
-            context.Response.StatusCode = 200;
-
-            if(results.Length == 1)
-            {
-                await writer.WriteAsync(context.Response.Body, results[0]);
-                return;
-            }
-
-            using (var sw = new StreamWriter(context.Response.Body, Encoding.UTF8))
-            {
-                sw.AutoFlush = true;
-                sw.Write("[");
-                for (int i = 0; i <= results.Length - 2; i++)
-                {
-                    await writer.WriteAsync(context.Response.Body, results[i]);
-                    sw.Write(",");
-                }
-                await writer.WriteAsync(context.Response.Body, results[results.Length - 1]);
-                sw.Write("]");
-            }
-        }
-
-        private static (List<GraphQLRequest> requests, string error) ExtractGraphQLRequests(string operationsJson, string mapJson, IFormCollection forms)
-        {
-            Dictionary<string, string[]> map;
-            JToken operations;
-
-            try
-            {
-                operations = JToken.Parse(operationsJson);
-            }
-            catch (JsonException)
-            {
-                return (null, $"Invalid JSON in the 'operations' multipart field ({SpecUrl}).");
-            }
-
-            try
-            {
-                map = JsonConvert.DeserializeObject<Dictionary<string, string[]>>(mapJson);
-            }
-            catch (JsonException)
-            {
-                return (null, $"Invalid JSON in the 'map' multipart field ({SpecUrl}).");
-            }
-
-            List<GraphQLRequest> requests;
-            var metaLookup = new Dictionary<int, List<Meta>>();
-
-            foreach (var entry in map)
-            {
-                var file = forms.Files.GetFile(entry.Key);
-                if(file is null)
-                {
-                    return (null, "File is null");
-                }
-
-                foreach (var path in entry.Value)
-                {
-                    (var index, var parts) = GetParts(path, operations is JArray);
-
-                    if (!metaLookup.ContainsKey(index))
-                    {
-                        metaLookup.Add(index, new List<Meta>());
-                    }
-
-                    metaLookup[index].Add(new Meta { File = file, Parts = parts });
-                }
-            }
-
-            if (operations is JArray)
-            {
-                int i = 0;
-                requests = operations
-                            .Select(j => CreateGraphQLRequest(j, metaLookup, i++))
-                            .ToList();
-            }
-            else
-            {
-                var request = CreateGraphQLRequest(operations, metaLookup, 0);
-                requests = new List<GraphQLRequest> { request };
-            }
-
-            return (requests, null);
-
-        }
-
-        private static GraphQLRequest CreateGraphQLRequest(JToken j, Dictionary<int, List<Meta>> metaLookup, int index)
-        {
-            var request = j.ToObject<GraphQLRequest>();
             if (metaLookup.ContainsKey(index))
             {
-                request.TokensToReplace = metaLookup[index];
+                operation.TokensToReplace = metaLookup[index];
             }
-            return request;
+
+            return operation;
         }
 
         private static (int requestIndex, List<object> parts) GetParts(string path, bool isBatchedRequest)
@@ -214,18 +124,21 @@ namespace GraphQL.Upload.AspNetCore
             var results = new List<object>();
             var requestIndex = 0;
 
-            foreach (var s in path.Split('.'))
+            foreach (var key in path.Split('.'))
             {
-                if (int.TryParse(s, out int integer))
+                if (int.TryParse(key, out int integer))
+                {
                     results.Add(integer);
+                }
                 else
-                    results.Add(s);
+                {
+                    results.Add(key);
+                }
             }
 
-            // remove request index and 'variables' part, 
+            // remove request index and 'variables' part,
             // because the parts list only needs to hold the parts relevant for each request
             // e.g: 0.variables.file.0 -> ["file", 0]
-
             if (isBatchedRequest)
             {
                 requestIndex = (int)results[0];
@@ -238,12 +151,112 @@ namespace GraphQL.Upload.AspNetCore
 
             return (requestIndex, results);
         }
-    }
 
-    class Meta
-    {
-        public List<object> Parts { get; set; }
+        private (IFormFileCollection, string, int) GetFiles(IFormCollection form)
+        {
+            if (!form.Files.Any())
+            {
+                return (null, $"No files attached. {DOCS_URL}", 400);
+            }
 
-        public IFormFile File { get; set; }
+            // validate file count
+            if (_options.MaximumFileCount < form.Files.Count)
+            {
+                return (null, $"{_options.MaximumFileCount} file uploads exceeded.", 413);
+            }
+
+            // validate file size
+            foreach (var file in form.Files)
+            {
+                if (file.Length > _options.MaximumFileSize)
+                {
+                    return (null, "File size limit exceeded.", 413);
+                }
+            }
+
+            return (form.Files, null, default);
+        }
+
+        private Task WriteErrorResponseAsync(HttpResponse httpResponse, IDocumentWriter writer,
+            string errorMessage, int httpStatusCode = 400 /* BadRequest */)
+        {
+            var result = new ExecutionResult
+            {
+                Errors = new ExecutionErrors
+                {
+                    new ExecutionError(errorMessage)
+                }
+            };
+
+            httpResponse.ContentType = "application/json";
+            httpResponse.StatusCode = httpStatusCode;
+
+            return writer.WriteAsync(httpResponse.Body, result);
+        }
+
+        private async Task WriteResponseAsync(HttpContext context, IDocumentWriter writer, ExecutionResult[] results)
+        {
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = 200;
+
+            foreach(var result in results)
+            {
+                if (result.Errors != null)
+                {
+                    _logger.LogError("GraphQL execution error(s): {Errors}", result.Errors);
+                }
+            }
+
+            if (results.Length == 1)
+            {
+                await writer.WriteAsync(context.Response.Body, results[0]);
+                return;
+            }
+
+            await writer.WriteAsync(context.Response.Body, results);
+        }
+
+        private (List<GraphQLUploadRequest> requests, string error) ExtractGraphQLRequests(
+            GraphQLUploadRequestDeserializationResult operations, IFormCollection forms)
+        {
+            List<GraphQLUploadRequest> requests;
+            var metaLookup = new Dictionary<int, List<GraphQLUploadFileMap>>();
+
+            foreach (var entry in operations.Map)
+            {
+                var file = forms.Files.GetFile(entry.Key);
+                if (file is null)
+                {
+                    return (null, "File is null");
+                }
+
+                foreach (var path in entry.Value)
+                {
+                    (var index, var parts) = GetParts(path, operations.Batch != default);
+
+                    if (!metaLookup.ContainsKey(index))
+                    {
+                        metaLookup.Add(index, new List<GraphQLUploadFileMap>());
+                    }
+
+                    metaLookup[index].Add(new GraphQLUploadFileMap { File = file, Parts = parts });
+                }
+            }
+
+            if (operations.Batch != default)
+            {
+                int i = 0;
+                requests = operations.Batch
+                    .Select(x => CreateGraphQLRequest(x, metaLookup, i++))
+                    .ToList();
+            }
+            else
+            {
+                var request = CreateGraphQLRequest(operations.Single, metaLookup, 0);
+                requests = new List<GraphQLUploadRequest> { request };
+            }
+
+            return (requests, null);
+        }
     }
 }

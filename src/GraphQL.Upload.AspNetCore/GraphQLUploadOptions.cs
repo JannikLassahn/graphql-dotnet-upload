@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 
 namespace GraphQL.Upload.AspNetCore
@@ -21,6 +22,6 @@ namespace GraphQL.Upload.AspNetCore
         /// <summary>
         /// Gets or sets the user context factory.
         /// </summary>
-        public Func<HttpContext, object> UserContextFactory { get; set; }
+        public Func<HttpContext, IDictionary<string, object>> UserContextFactory { get; set; }
     }
 }

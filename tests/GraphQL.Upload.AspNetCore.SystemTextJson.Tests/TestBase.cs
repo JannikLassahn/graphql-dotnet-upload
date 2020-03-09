@@ -1,4 +1,4 @@
-﻿using GraphQL.Http;
+﻿using GraphQL.SystemTextJson;
 using GraphQL.Types;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;

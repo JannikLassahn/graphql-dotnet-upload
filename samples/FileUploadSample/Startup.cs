@@ -1,10 +1,10 @@
-﻿using GraphQL;
-using GraphQL.Server;
+﻿using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
 using GraphQL.Types;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace FileUploadSample
 {
@@ -13,8 +13,6 @@ namespace FileUploadSample
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<UploadRepository>();
-
-            services.AddSingleton<IDependencyResolver>(s => new FuncDependencyResolver(s.GetRequiredService));
 
             services.AddSingleton<ISchema, SampleSchema>();
             services.AddSingleton<Query>();
@@ -25,12 +23,13 @@ namespace FileUploadSample
             services.AddGraphQL(_ =>
             {
                 _.ExposeExceptions = true;
-            });
+            })
+            .AddSystemTextJson();
 
             services.AddCors();
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostEnvironment env)
         {
             if (env.IsDevelopment())
             {

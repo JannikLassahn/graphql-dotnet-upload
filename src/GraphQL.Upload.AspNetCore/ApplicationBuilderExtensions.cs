@@ -40,7 +40,7 @@ namespace Microsoft.AspNetCore.Builder
             if (options is null)
                 throw new ArgumentNullException(nameof(options));
 
-            return builder.UseWhen(context => context.Request.Path.StartsWithSegments(path), branch => branch.UseMiddleware<GraphQLUploadMiddleware<TSchema>>(options));
+            return builder.UseMiddleware<GraphQLUploadMiddleware<TSchema>>(options);
         }
     }
 }
