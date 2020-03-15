@@ -91,8 +91,6 @@ namespace GraphQL.Upload.AspNetCore
             var executer = context.RequestServices.GetRequiredService<IDocumentExecuter>();
             var schema = context.RequestServices.GetRequiredService<TSchema>();
 
-            var test = requests.First().Variables.ToInputs();
-
             var results = await Task.WhenAll(
                 requests.Select(request => executer.ExecuteAsync(new ExecutionOptions
                 {

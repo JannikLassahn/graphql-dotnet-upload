@@ -56,21 +56,19 @@ namespace GraphQL.Upload.AspNetCore
                 if (isBatched)
                 {
 #if IS_NET_CORE_3_ONWARDS_TARGET
-                    result.Batch = (JsonSerializer.Deserialize<InternalGraphQLUploadRequest[]>(operations, _serializerOptions))
-                        .Select(ToGraphQLRequest)
+                    result.Batch = (JsonSerializer.Deserialize<GraphQLUploadRequest[]>(operations, _serializerOptions))
                         .ToArray();
 #else
-                    result.Batch = (JsonConvert.DeserializeObject<InternalGraphQLUploadRequest[]>(operations))
-                        .Select(ToGraphQLRequest)
+                    result.Batch = (JsonConvert.DeserializeObject<GraphQLUploadRequest[]>(operations))
                         .ToArray();
 #endif
                 }
                 else
                 {
 #if IS_NET_CORE_3_ONWARDS_TARGET
-                    result.Single = ToGraphQLRequest(JsonSerializer.Deserialize<InternalGraphQLUploadRequest>(operations, _serializerOptions));
+                    result.Single = JsonSerializer.Deserialize<GraphQLUploadRequest>(operations, _serializerOptions);
 #else
-                    result.Single = ToGraphQLRequest(JsonConvert.DeserializeObject<InternalGraphQLUploadRequest>(operations));
+                    result.Single = JsonConvert.DeserializeObject<GraphQLUploadRequest>(operations);
 #endif
                 }
             }
@@ -79,18 +77,6 @@ namespace GraphQL.Upload.AspNetCore
                 throw new Exception("Invalid JSON in the 'operations' Upload field.");
             }
         }
-
-        private GraphQLUploadRequest ToGraphQLRequest(InternalGraphQLUploadRequest graphQLUploadRequest)
-            => new GraphQLUploadRequest
-            {
-                OperationName = graphQLUploadRequest.OperationName,
-                Query = graphQLUploadRequest.Query,
-#if IS_NET_CORE_3_ONWARDS_TARGET
-                Variables = graphQLUploadRequest.Variables,
-#else
-                Variables = graphQLUploadRequest.Variables.ToDictionary(),
-#endif
-            };
 
         private void SetMap(GraphQLUploadRequestDeserializationResult result, IFormCollection form)
         {
