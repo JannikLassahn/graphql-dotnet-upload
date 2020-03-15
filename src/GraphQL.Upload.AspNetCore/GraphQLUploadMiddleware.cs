@@ -13,7 +13,7 @@ namespace GraphQL.Upload.AspNetCore
     public class GraphQLUploadMiddleware<TSchema>
         where TSchema : ISchema
     {
-        private const string DOCS_URL = "See: https://github.com/jaydenseric/graphql-Upload-request-spec.";
+        private const string DOCS_URL = "See: https://github.com/jaydenseric/graphql-multipart-request-spec.";
         private readonly ILogger _logger;
         private readonly RequestDelegate _next;
         private readonly GraphQLUploadOptions _options;
