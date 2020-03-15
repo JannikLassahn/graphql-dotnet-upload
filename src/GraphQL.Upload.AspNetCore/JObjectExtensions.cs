@@ -1,8 +1,9 @@
+#if !IS_NET_CORE_3_ONWARDS_TARGET
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 
-namespace GraphQL.Upload.AspNetCore.NewtonsoftJson
+namespace GraphQL.Upload.AspNetCore
 {
     public static class JObjectExtensions
     {
@@ -29,3 +30,4 @@ namespace GraphQL.Upload.AspNetCore.NewtonsoftJson
         }
     }
 }
+#endif

@@ -1,24 +1,30 @@
-using GraphQL.SystemTextJson;
 using Microsoft.AspNetCore.Http;
 using System;
-using System.Buffers;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
+using System.Collections.Generic;
 
-namespace GraphQL.Upload.AspNetCore.SystemTextJson
+#if IS_NET_CORE_3_ONWARDS_TARGET
+using GraphQL.SystemTextJson;
+using System.Text.Json;
+#else
+using GraphQL.NewtonsoftJson;
+using Newtonsoft.Json;
+#endif
+
+
+namespace GraphQL.Upload.AspNetCore
 {
-    public class GraphQLUploadRequestDeserializer : IGraphQLUploadRequestDeserializer
+    public class GraphQLUploadRequestDeserializer
     {
+#if IS_NET_CORE_3_ONWARDS_TARGET
         private readonly JsonSerializerOptions _serializerOptions = new JsonSerializerOptions();
 
-        public GraphQLUploadRequestDeserializer(Action<JsonSerializerOptions> configure)
+        public GraphQLUploadRequestDeserializer()
         {
             // Add converter that deserializes Variables property
             _serializerOptions.Converters.Add(new ObjectDictionaryConverter());
-
-            configure?.Invoke(_serializerOptions);
         }
+#endif
 
         public GraphQLUploadRequestDeserializationResult DeserializeFromFormCollection(IFormCollection form)
         {
@@ -49,13 +55,23 @@ namespace GraphQL.Upload.AspNetCore.SystemTextJson
             {
                 if (isBatched)
                 {
+#if IS_NET_CORE_3_ONWARDS_TARGET
                     result.Batch = (JsonSerializer.Deserialize<InternalGraphQLUploadRequest[]>(operations, _serializerOptions))
                         .Select(ToGraphQLRequest)
                         .ToArray();
+#else
+                    result.Batch = (JsonConvert.DeserializeObject<InternalGraphQLUploadRequest[]>(operations))
+                        .Select(ToGraphQLRequest)
+                        .ToArray();
+#endif
                 }
                 else
                 {
+#if IS_NET_CORE_3_ONWARDS_TARGET
                     result.Single = ToGraphQLRequest(JsonSerializer.Deserialize<InternalGraphQLUploadRequest>(operations, _serializerOptions));
+#else
+                    result.Single = ToGraphQLRequest(JsonConvert.DeserializeObject<InternalGraphQLUploadRequest>(operations));
+#endif
                 }
             }
             catch
@@ -69,7 +85,11 @@ namespace GraphQL.Upload.AspNetCore.SystemTextJson
             {
                 OperationName = graphQLUploadRequest.OperationName,
                 Query = graphQLUploadRequest.Query,
+#if IS_NET_CORE_3_ONWARDS_TARGET
                 Variables = graphQLUploadRequest.Variables,
+#else
+                Variables = graphQLUploadRequest.Variables.ToDictionary(),
+#endif
             };
 
         private void SetMap(GraphQLUploadRequestDeserializationResult result, IFormCollection form)
@@ -81,7 +101,11 @@ namespace GraphQL.Upload.AspNetCore.SystemTextJson
 
             try
             {
+#if IS_NET_CORE_3_ONWARDS_TARGET
                 result.Map = JsonSerializer.Deserialize<Dictionary<string, string[]>>(map);
+#else
+                result.Map = JsonConvert.DeserializeObject<Dictionary<string, string[]>>(map);
+#endif
             }
             catch (JsonException)
             {

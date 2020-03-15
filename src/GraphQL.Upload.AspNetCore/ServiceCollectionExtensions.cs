@@ -1,5 +1,4 @@
 ﻿using GraphQL.Upload.AspNetCore;
-using GraphQL.Upload.AspNetCore.NewtonsoftJson;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -7,7 +6,7 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static IServiceCollection AddGraphQLUpload(this IServiceCollection services)
         {
-            services.AddSingleton<IGraphQLUploadRequestDeserializer>(x => new GraphQLUploadRequestDeserializer());
+            services.AddSingleton<GraphQLUploadRequestDeserializer>();
             services.AddSingleton<UploadGraphType>();
             
             return services;

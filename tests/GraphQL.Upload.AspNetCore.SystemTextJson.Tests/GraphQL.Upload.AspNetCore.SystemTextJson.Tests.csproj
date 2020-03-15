@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\GraphQL.Upload.AspNetCore\GraphQL.Upload.AspNetCore.csproj" />
-    <ProjectReference Include="..\..\src\GraphQL.Upload.AspNetCore.SystemTextJson\GraphQL.Upload.AspNetCore.SystemTextJson.csproj" />
   </ItemGroup>
 
 </Project>

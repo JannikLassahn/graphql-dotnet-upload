@@ -17,10 +17,10 @@ namespace GraphQL.Upload.AspNetCore
         private readonly ILogger _logger;
         private readonly RequestDelegate _next;
         private readonly GraphQLUploadOptions _options;
-        private readonly IGraphQLUploadRequestDeserializer _requestDeserializer;
+        private readonly GraphQLUploadRequestDeserializer _requestDeserializer;
 
         public GraphQLUploadMiddleware(ILogger<GraphQLUploadMiddleware<TSchema>> logger, RequestDelegate next,
-            GraphQLUploadOptions options, IGraphQLUploadRequestDeserializer requestDeserializer)
+            GraphQLUploadOptions options, GraphQLUploadRequestDeserializer requestDeserializer)
         {
             _logger = logger;
             _next = next ?? throw new ArgumentNullException(nameof(next));
