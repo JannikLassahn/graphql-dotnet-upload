@@ -11,7 +11,6 @@ using GraphQL.NewtonsoftJson;
 using Newtonsoft.Json;
 #endif
 
-
 namespace GraphQL.Upload.AspNetCore
 {
     public class GraphQLUploadRequestDeserializer
