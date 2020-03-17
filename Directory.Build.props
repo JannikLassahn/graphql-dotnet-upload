@@ -1,0 +1,18 @@
+<Project>
+
+    <PropertyGroup>
+        <IsNetCore3OnwardsTarget>$(TargetFramework.StartsWith('netcoreapp3.'))</IsNetCore3OnwardsTarget>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <GraphQLVersion>3.0.0-preview-1490</GraphQLVersion>
+        <GraphQLServerVersion>3.5.0-alpha0046</GraphQLServerVersion>
+        <MicrosoftAspNetCoreHttpAbstractionsVersion>2.2.0</MicrosoftAspNetCoreHttpAbstractionsVersion>
+        <MicrosoftAspNetCoreHttpFeaturesVersion>3.1.2</MicrosoftAspNetCoreHttpFeaturesVersion>
+        <MicrosoftExtensionsLoggingVersion>3.1.2</MicrosoftExtensionsLoggingVersion>
+        <MicrosoftExtensionsOptionsVersion>3.1.2</MicrosoftExtensionsOptionsVersion>
+        <XunitVersion>2.4.1</XunitVersion>
+        <XunitRunnerVisualStudioVersion>2.4.1</XunitRunnerVisualStudioVersion>
+    </PropertyGroup>
+
+</Project>

@@ -2,6 +2,8 @@
 using GraphQL.Types;
 using GraphQL.Upload.AspNetCore;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,11 +12,11 @@ namespace FileUploadSample
 {
     public class SampleSchema : Schema
     {
-        public SampleSchema(IDependencyResolver resolver)
-            : base(resolver)
+        public SampleSchema(IServiceProvider provider)
+            : base(provider)
         {
-            Query = resolver.Resolve<Query>();
-            Mutation = resolver.Resolve<Mutation>();
+            Query = provider.GetRequiredService<Query>();
+            Mutation = provider.GetRequiredService<Mutation>();
             RegisterValueConverter(new FormFileConverter());
         }
     }

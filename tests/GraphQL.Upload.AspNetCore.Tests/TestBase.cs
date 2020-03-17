@@ -1,5 +1,4 @@
-﻿using GraphQL.Http;
-using GraphQL.Types;
+﻿using GraphQL.Types;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -8,6 +7,12 @@ using System.IO;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
+
+#if IS_NET_CORE_3_ONWARDS_TARGET
+using GraphQL.SystemTextJson;
+#else
+using GraphQL.NewtonsoftJson;
+#endif
 
 namespace GraphQL.Upload.AspNetCore.Tests
 {

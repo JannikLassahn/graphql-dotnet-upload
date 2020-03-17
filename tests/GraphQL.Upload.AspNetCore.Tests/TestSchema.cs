@@ -40,7 +40,7 @@ namespace GraphQL.Upload.AspNetCore.Tests
                 resolve: context =>
                 {
                     var files = context.GetArgument<List<IFormFile>>("files");
-                    return string.Join(',', files.Select(file => file.FileName));
+                    return string.Join(",", files.Select(file => file.FileName));
                 });
         }
 

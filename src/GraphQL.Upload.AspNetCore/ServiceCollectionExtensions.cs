@@ -6,7 +6,10 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         public static IServiceCollection AddGraphQLUpload(this IServiceCollection services)
         {
-            return services.AddSingleton<UploadGraphType>();
+            services.AddSingleton<GraphQLUploadRequestDeserializer>();
+            services.AddSingleton<UploadGraphType>();
+            
+            return services;
         }
     }
 }
