@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using GraphQL.Execution;
 using GraphQL.Types;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -92,14 +93,18 @@ namespace GraphQL.Upload.AspNetCore
             var schema = context.RequestServices.GetRequiredService<TSchema>();
 
             var results = await Task.WhenAll(
-                requests.Select(request => executer.ExecuteAsync(new ExecutionOptions
+                requests.Select(request => executer.ExecuteAsync(options =>
                 {
-                    CancellationToken = context.RequestAborted,
-                    Schema = schema,
-                    Query = request.Query,
-                    OperationName = request.OperationName,
-                    Inputs = request.GetInputs(),
-                    UserContext = _options.UserContextFactory?.Invoke(context),
+                    options.CancellationToken = context.RequestAborted;
+                    options.Schema = schema;
+                    options.Query = request.Query;
+                    options.OperationName = request.OperationName;
+                    options.Inputs = request.GetInputs();
+                    options.UserContext = _options.UserContextFactory?.Invoke(context);
+                    foreach (var listener in context.RequestServices.GetRequiredService<IEnumerable<IDocumentExecutionListener>>())
+                    {
+                        options.Listeners.Add(listener);
+                    }
                 })));
 
             await WriteResponseAsync(context, writer, results);
