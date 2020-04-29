@@ -10,6 +10,7 @@ You can install the latest version via [NuGet](https://www.nuget.org/packages/Gr
 ```
 PM> Install-Package GraphQL.Upload.AspNetCore
 ```
+Preview versions from the develop branch are available via [GitHub Packages](https://github.com/JannikLassahn/graphql-dotnet-upload/packages). Use these if you are using **ASP.NET Core 3**.
 
 ## Usage
 
