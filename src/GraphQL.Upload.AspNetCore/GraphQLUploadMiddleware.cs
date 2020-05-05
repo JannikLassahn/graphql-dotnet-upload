@@ -19,20 +19,23 @@ namespace GraphQL.Upload.AspNetCore
         private readonly RequestDelegate _next;
         private readonly GraphQLUploadOptions _options;
         private readonly GraphQLUploadRequestDeserializer _requestDeserializer;
-
+        private readonly string _graphQLPath;
         public GraphQLUploadMiddleware(ILogger<GraphQLUploadMiddleware<TSchema>> logger, RequestDelegate next,
-            GraphQLUploadOptions options, GraphQLUploadRequestDeserializer requestDeserializer)
+            GraphQLUploadOptions options, PathString path, GraphQLUploadRequestDeserializer requestDeserializer)
         {
             _logger = logger;
             _next = next ?? throw new ArgumentNullException(nameof(next));
             _options = options;
             _requestDeserializer = requestDeserializer;
+            _graphQLPath = path;
         }
 
         public async Task InvokeAsync(HttpContext context)
         {
-            if (!context.Request.HasFormContentType)
+            if (!context.Request.HasFormContentType                 
+                || !context.Request.Path.StartsWithSegments( _graphQLPath ))
             {
+                // not graphql path, eg. Form Authentication, skip this middleware
                 await _next(context);
                 return;
             }
