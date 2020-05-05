@@ -33,7 +33,7 @@ namespace GraphQL.Upload.AspNetCore
         public async Task InvokeAsync(HttpContext context)
         {
             if (!context.Request.HasFormContentType                 
-                || !context.Request.Path.Value.ToLower().StartsWith( _graphQLPath.ToLower() ))
+                || !context.Request.Path.StartsWithSegments( _graphQLPath ))
             {
                 // not graphql path, eg. Form Authentication, skip this middleware
                 await _next(context);
