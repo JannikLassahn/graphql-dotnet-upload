@@ -5,8 +5,8 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <GraphQLVersion>3.0.0-preview-1490</GraphQLVersion>
-        <GraphQLServerVersion>3.5.0-alpha0046</GraphQLServerVersion>
+        <GraphQLVersion>3.0.0</GraphQLVersion>
+        <GraphQLServerVersion>3.5.0-alpha0073</GraphQLServerVersion>
         <MicrosoftAspNetCoreHttpAbstractionsVersion>2.2.0</MicrosoftAspNetCoreHttpAbstractionsVersion>
         <MicrosoftAspNetCoreHttpFeaturesVersion>3.1.2</MicrosoftAspNetCoreHttpFeaturesVersion>
         <MicrosoftExtensionsLoggingVersion>3.1.2</MicrosoftExtensionsLoggingVersion>
