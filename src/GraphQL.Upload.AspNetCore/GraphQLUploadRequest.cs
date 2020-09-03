@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 
 #if IS_NET_CORE_3_ONWARDS_TARGET
-using System.Collections.Generic;
 using System.Text.Json.Serialization;
 #else
 using Newtonsoft.Json;
