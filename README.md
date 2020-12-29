@@ -10,11 +10,13 @@ You can install the latest version via [NuGet](https://www.nuget.org/packages/Gr
 ```
 PM> Install-Package GraphQL.Upload.AspNetCore
 ```
-Preview versions from the develop branch are available via [GitHub Packages](https://github.com/JannikLassahn/graphql-dotnet-upload/packages). Use these if you are using **ASP.NET Core 3**.
+Preview versions from the develop branch are available via [GitHub Packages](https://github.com/JannikLassahn/graphql-dotnet-upload/packages).
 
 ## Usage
 
-Register the middleware in your Startup.cs (in this case we're also using [graphql-dotnet/server](https://github.com/graphql-dotnet/server)).
+Register the middleware in your Startup.cs.
+
+This middleware implementation **only** parses multipart requests. That's why we're using additional middleware ([graphql-dotnet/server](https://github.com/graphql-dotnet/server)) to handle other request types.
 ```csharp
 public void ConfigureServices(IServiceCollection services)
 {
@@ -31,7 +33,7 @@ public void Configure(IApplicationBuilder app)
 ```
 
 Register a `FormFileConverter` within your MySchema.cs.
-```c#
+```csharp
 public class MySchema : Schema
 {
     public MySchema()
@@ -73,12 +75,3 @@ curl localhost:54234/graphql \
 	-F map='{ "0": ["variables.file"] }' \
 	-F 0=@a.txt
 ```
-
-This middleware implementation **only** parses multipart requests. The sample app uses additional middleware that handles other cases (e.g. `POST` with `application/json`).
-
-
-## Roadmap
-- [ ] Make sure the implementation behaves according to the spec
-- [x] Add convenience extension methods for `ServiceCollection` and `ApplicationBuilder` that register the neccessary types
-- [ ] Feature parity with the [reference implementation](https://github.com/graphql-dotnet/server)
-- [ ] End to end sample with web based client
