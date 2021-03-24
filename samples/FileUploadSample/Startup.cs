@@ -1,8 +1,7 @@
 ﻿using GraphQL.Server;
-using GraphQL.Server.Ui.Playground;
 using GraphQL.Types;
+
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -20,11 +19,9 @@ namespace FileUploadSample
             services.AddSingleton<FileGraphType>();
 
             services.AddGraphQLUpload();
-            services.AddGraphQL(_ =>
-            {
-                _.ExposeExceptions = true;
-            })
-            .AddSystemTextJson();
+            services.AddGraphQL()
+                .AddErrorInfoProvider(opt => opt.ExposeExceptionStackTrace = true)
+                .AddSystemTextJson();
 
             services.AddCors();
         }
@@ -47,10 +44,7 @@ namespace FileUploadSample
             app.UseGraphQLUpload<ISchema>();
 
             app.UseGraphQL<ISchema>();
-            app.UseGraphQLPlayground(new GraphQLPlaygroundOptions
-            {
-                Path = "/"
-            });
+            app.UseGraphQLPlayground("/");
         }
     }
 }

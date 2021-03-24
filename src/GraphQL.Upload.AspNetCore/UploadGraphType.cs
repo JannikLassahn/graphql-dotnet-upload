@@ -1,4 +1,5 @@
-﻿using GraphQL.Language.AST;
+﻿using System;
+using GraphQL.Language.AST;
 using GraphQL.Types;
 using Microsoft.AspNetCore.Http;
 
@@ -14,8 +15,17 @@ namespace GraphQL.Upload.AspNetCore
 
         public override object ParseLiteral(IValue value)
         {
-            var formFileValue = value as FormFileValue;
-            return formFileValue?.Value;
+            if (value is NullValue)
+            {
+                return null;
+            }
+
+            if (value is FormFileValue)
+            {
+                return value.Value;
+            }
+
+            return ThrowLiteralConversionError(value);
         }
 
         public override object ParseValue(object value)
@@ -23,35 +33,29 @@ namespace GraphQL.Upload.AspNetCore
             return value;
         }
 
-        public override object Serialize(object value)
+        /// <inheritdoc />
+        public override IValue ToAST(object value)
         {
-            return ParseValue(value);
+            var serialized = Serialize(value);
+            if (serialized is IFormFile formFile)
+            {
+                return new FormFileValue(formFile);
+            }
+
+            if (serialized is null)
+            {
+                return new NullValue();
+            }
+
+            throw new NotImplementedException($"Please override the '{nameof(ToAST)}' method of the '{GetType().Name}' scalar to support this operation.");
         }
     }
 
-    public class FormFileValue : ValueNode<IFormFile>
+    internal class FormFileValue : ValueNode<IFormFile>
     {
         public FormFileValue(IFormFile value)
         {
             Value = value;
-        }
-
-        protected override bool Equals(ValueNode<IFormFile> node)
-        {
-            return Value.Equals(node.Value);
-        }
-    }
-
-    public class FormFileConverter : IAstFromValueConverter
-    {
-        public IValue Convert(object value, IGraphType type)
-        {
-            return new FormFileValue(value as IFormFile);
-        }
-
-        public bool Matches(object value, IGraphType type)
-        {
-            return value is IFormFile;
         }
     }
 }
