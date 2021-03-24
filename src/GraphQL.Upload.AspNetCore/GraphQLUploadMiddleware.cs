@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GraphQL.Execution;
+using GraphQL.Server.Transports.AspNetCore;
 using GraphQL.Types;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -60,7 +61,7 @@ namespace GraphQL.Upload.AspNetCore
                 return;
             }
 
-            var form = await context.Request.ReadFormAsync();
+            var form = await context.Request.ReadFormAsync(cancellationToken);
 
             int statusCode = 400;
             string error;
@@ -94,6 +95,17 @@ namespace GraphQL.Upload.AspNetCore
 
             var executer = context.RequestServices.GetRequiredService<IDocumentExecuter>();
             var schema = context.RequestServices.GetRequiredService<TSchema>();
+#pragma warning disable 618
+            var userContext = _options.UserContextFactory?.Invoke(context);
+#pragma warning restore 618
+            if (userContext == null)
+            {
+                var userContextBuilder = context.RequestServices.GetService<IUserContextBuilder>();
+                if (userContextBuilder != null)
+                {
+                    userContext = await userContextBuilder.BuildUserContext(context);
+                }
+            }
 
             var results = await Task.WhenAll(
                 requests.Select(request => executer.ExecuteAsync(options =>
@@ -103,7 +115,8 @@ namespace GraphQL.Upload.AspNetCore
                     options.Query = request.Query;
                     options.OperationName = request.OperationName;
                     options.Inputs = request.GetInputs();
-                    options.UserContext = _options.UserContextFactory?.Invoke(context);
+                    options.UserContext = userContext;
+
                     foreach (var listener in context.RequestServices.GetRequiredService<IEnumerable<IDocumentExecutionListener>>())
                     {
                         options.Listeners.Add(listener);

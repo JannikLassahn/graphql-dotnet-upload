@@ -22,6 +22,7 @@ namespace GraphQL.Upload.AspNetCore
         /// <summary>
         /// Gets or sets the user context factory.
         /// </summary>
+        [Obsolete("Register a service that implements IUserContextBuilder to create a user context.")]
         public Func<HttpContext, IDictionary<string, object>> UserContextFactory { get; set; }
     }
 }
