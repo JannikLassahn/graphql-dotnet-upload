@@ -17,7 +17,6 @@ namespace FileUploadSample
         {
             Query = provider.GetRequiredService<Query>();
             Mutation = provider.GetRequiredService<Mutation>();
-            RegisterValueConverter(new FormFileConverter());
         }
     }
 

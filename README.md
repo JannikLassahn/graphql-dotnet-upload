@@ -32,19 +32,6 @@ public void Configure(IApplicationBuilder app)
 }
 ```
 
-Register a `FormFileConverter` within your MySchema.cs.
-```csharp
-public class MySchema : Schema
-{
-    public MySchema()
-    {
-        Query = new Query();
-        Mutation = new Mutation();
-        RegisterValueConverter(new FormFileConverter());
-    }
-}
-```
-
 Use the upload scalar in your resolvers. Files are exposed as `IFormFile`. 
 ```csharp
 Field<StringGraphType>(

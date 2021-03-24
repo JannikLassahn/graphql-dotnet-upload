@@ -11,12 +11,17 @@ namespace GraphQL.Upload.AspNetCore.Tests
         {
             Query = new Query();
             Mutation = new Mutation();
-            RegisterValueConverter(new FormFileConverter());
         }
     }
 
-    public class Query : ObjectGraphType
+    public sealed class Query : ObjectGraphType
     {
+        public Query()
+        {
+            Field<NonNullGraphType<BooleanGraphType>>()
+                .Name("dummy")
+                .Resolve(x => true);
+        }
     }
 
     public class Mutation : ObjectGraphType
