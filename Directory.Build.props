@@ -1,8 +1,17 @@
 <Project>
 
-    <PropertyGroup>
-        <IsNetCore3OnwardsTarget>$(TargetFramework.StartsWith('netcoreapp3.'))</IsNetCore3OnwardsTarget>
-    </PropertyGroup>
+    <Choose>
+        <When Condition="$(TargetFramework.StartsWith('netcoreapp3.')) Or $(TargetFramework.StartsWith('net5'))">
+            <PropertyGroup>
+                <IsNetCore3OnwardsTarget>True</IsNetCore3OnwardsTarget>
+            </PropertyGroup>
+        </When>
+        <Otherwise>
+            <PropertyGroup>
+                <IsNetCore3OnwardsTarget>False</IsNetCore3OnwardsTarget>
+            </PropertyGroup>
+        </Otherwise>
+    </Choose>
 
     <PropertyGroup>
         <GraphQLVersion>3.0.0</GraphQLVersion>
