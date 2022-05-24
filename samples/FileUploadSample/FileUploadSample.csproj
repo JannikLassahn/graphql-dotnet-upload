@@ -6,8 +6,8 @@
 
   <ItemGroup>
     <PackageReference Include="GraphQL" Version="$(GraphQLVersion)" />
+    <PackageReference Include="GraphQL.MicrosoftDI" Version="$(GraphQLVersion)" />
     <PackageReference Include="GraphQL.Server.Transports.AspNetCore" Version="$(GraphQLServerVersion)" />
-    <PackageReference Include="GraphQL.Server.Transports.AspNetCore.SystemTextJson" Version="$(GraphQLServerVersion)" />
     <PackageReference Include="GraphQL.Server.Ui.Playground" Version="$(GraphQLServerVersion)" />
   </ItemGroup>
 

@@ -21,7 +21,7 @@ namespace GraphQL.Upload.AspNetCore
         public GraphQLUploadRequestDeserializer()
         {
             // Add converter that deserializes Variables property
-            _serializerOptions.Converters.Add(new ObjectDictionaryConverter());
+            _serializerOptions.Converters.Add(new InputsJsonConverter());
         }
 #endif
 
