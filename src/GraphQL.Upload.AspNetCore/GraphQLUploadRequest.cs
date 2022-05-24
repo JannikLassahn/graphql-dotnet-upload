@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.Linq;
 
 #if IS_NET_CORE_3_ONWARDS_TARGET
 using System.Text.Json.Serialization;
+using System.Text.Json;
 #else
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -64,7 +66,17 @@ namespace GraphQL.Upload.AspNetCore
                         }
                         else
                         {
-                            variableSection = ((Dictionary<string, object>)variableSection)[key];
+                            var variableDictionary = ((Dictionary<string, object>)variableSection);
+#if IS_NET_CORE_3_ONWARDS_TARGET
+                            if (variableDictionary[key] is JsonElement jsonElement)
+                            {
+                                var count = jsonElement.GetArrayLength();
+                                var list = Enumerable.Repeat((object)null, count).ToList();
+                                variableDictionary[key] = list;
+                            }
+#endif
+
+                            variableSection = variableDictionary[key];
                         }
                     }
                     else if (part is int index)

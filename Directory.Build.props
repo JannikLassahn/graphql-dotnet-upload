@@ -14,8 +14,8 @@
     </Choose>
 
     <PropertyGroup>
-        <GraphQLVersion>4.0.2</GraphQLVersion>
-        <GraphQLServerVersion>5.0.0</GraphQLServerVersion>
+        <GraphQLVersion>5.3.0</GraphQLVersion>
+        <GraphQLServerVersion>6.1.0</GraphQLServerVersion>
         <MicrosoftAspNetCoreHttpAbstractionsVersion>2.2.0</MicrosoftAspNetCoreHttpAbstractionsVersion>
         <MicrosoftAspNetCoreHttpFeaturesVersion>3.1.2</MicrosoftAspNetCoreHttpFeaturesVersion>
         <MicrosoftExtensionsLoggingVersion>3.1.2</MicrosoftExtensionsLoggingVersion>

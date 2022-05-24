@@ -1,6 +1,4 @@
-﻿using System;
-using GraphQL.Language.AST;
-using GraphQL.Types;
+﻿using GraphQL.Types;
 using Microsoft.AspNetCore.Http;
 
 namespace GraphQL.Upload.AspNetCore
@@ -13,49 +11,19 @@ namespace GraphQL.Upload.AspNetCore
             Description = "A meta type that represents a file upload.";
         }
 
-        public override object ParseLiteral(IValue value)
+        public override object ParseValue(object value)
         {
-            if (value is NullValue)
+            if (value == null)
             {
                 return null;
             }
 
-            if (value is FormFileValue)
+            if (value is IFormFile formFile)
             {
-                return value.Value;
+                return formFile;
             }
 
-            return ThrowLiteralConversionError(value);
-        }
-
-        public override object ParseValue(object value)
-        {
-            return value;
-        }
-
-        /// <inheritdoc />
-        public override IValue ToAST(object value)
-        {
-            var serialized = Serialize(value);
-            if (serialized is IFormFile formFile)
-            {
-                return new FormFileValue(formFile);
-            }
-
-            if (serialized is null)
-            {
-                return new NullValue();
-            }
-
-            throw new NotImplementedException($"Please override the '{nameof(ToAST)}' method of the '{GetType().Name}' scalar to support this operation.");
-        }
-    }
-
-    internal class FormFileValue : ValueNode<IFormFile>
-    {
-        public FormFileValue(IFormFile value)
-        {
-            Value = value;
+            return ThrowValueConversionError(value);
         }
     }
 }

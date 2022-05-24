@@ -45,7 +45,7 @@ namespace GraphQL.Upload.AspNetCore
             var httpRequest = context.Request;
             var httpResponse = context.Response;
 
-            var writer = context.RequestServices.GetRequiredService<IDocumentWriter>();
+            var writer = context.RequestServices.GetRequiredService<IGraphQLSerializer>();
             var cancellationToken = GetCancellationToken(context);
 
             // GraphQL HTTP only supports GET and POST methods
@@ -102,7 +102,7 @@ namespace GraphQL.Upload.AspNetCore
                     options.Schema = schema;
                     options.Query = request.Query;
                     options.OperationName = request.OperationName;
-                    options.Inputs = request.GetInputs();
+                    options.Variables = request.GetInputs();
                     options.UserContext = _options.UserContextFactory?.Invoke(context);
                     options.RequestServices = context.RequestServices;
                     foreach (var listener in context.RequestServices.GetRequiredService<IEnumerable<IDocumentExecutionListener>>())
@@ -184,7 +184,7 @@ namespace GraphQL.Upload.AspNetCore
             return (form.Files, null, default);
         }
 
-        private Task WriteErrorResponseAsync(HttpResponse httpResponse, IDocumentWriter writer,
+        private Task WriteErrorResponseAsync(HttpResponse httpResponse, IGraphQLSerializer writer,
             string errorMessage, int httpStatusCode = 400 /* BadRequest */)
         {
             var result = new ExecutionResult
@@ -201,7 +201,7 @@ namespace GraphQL.Upload.AspNetCore
             return writer.WriteAsync(httpResponse.Body, result);
         }
 
-        private async Task WriteResponseAsync(HttpContext context, IDocumentWriter writer, ExecutionResult[] results)
+        private async Task WriteResponseAsync(HttpContext context, IGraphQLSerializer writer, ExecutionResult[] results)
         {
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = 200;

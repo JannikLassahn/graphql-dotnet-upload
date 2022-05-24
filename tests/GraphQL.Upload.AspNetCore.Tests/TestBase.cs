@@ -26,7 +26,7 @@ namespace GraphQL.Upload.AspNetCore.Tests
                 .UseContentRoot(Path.GetDirectoryName(path))
                 .ConfigureServices(services =>
                     services.AddSingleton<IDocumentExecuter, DocumentExecuter>()
-                            .AddSingleton<IDocumentWriter, DocumentWriter>()
+                            .AddSingleton<IGraphQLSerializer, GraphQLSerializer>()
                             .AddSingleton<ISchema, TestSchema>()
                             .AddGraphQLUpload()
                 )
