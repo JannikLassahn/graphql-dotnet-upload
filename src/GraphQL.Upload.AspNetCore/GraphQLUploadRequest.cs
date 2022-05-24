@@ -66,16 +66,17 @@ namespace GraphQL.Upload.AspNetCore
                         }
                         else
                         {
+                            var variableDictionary = ((Dictionary<string, object>)variableSection);
 #if IS_NET_CORE_3_ONWARDS_TARGET
-                            if (((Dictionary<string, object>)variableSection)[key] is JsonElement jsonElement)
+                            if (variableDictionary[key] is JsonElement jsonElement)
                             {
                                 var count = jsonElement.GetArrayLength();
                                 var list = Enumerable.Repeat((object)null, count).ToList();
-                                ((Dictionary<string, object>)variableSection)[key] = list;
+                                variableDictionary[key] = list;
                             }
 #endif
 
-                            variableSection = ((Dictionary<string, object>)variableSection)[key];
+                            variableSection = variableDictionary[key];
                         }
                     }
                     else if (part is int index)
