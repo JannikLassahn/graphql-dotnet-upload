@@ -32,24 +32,24 @@ namespace FileUploadSample
     {
         public Mutation(UploadRepository uploads)
         {
-            Field<FileGraphType>(
+            FieldAsync<FileGraphType>(
                 "singleUpload",
                 arguments: new QueryArguments(
                     new QueryArgument<UploadGraphType> { Name = "file" }),
-                resolve: context =>
+                resolve: async context =>
                 {
                     var file = context.GetArgument<IFormFile>("file");
-                    return uploads.Save(file);
+                    return await uploads.Save(file);
                 });
 
-            Field<ListGraphType<FileGraphType>>(
+            FieldAsync<ListGraphType<FileGraphType>>(
                 "multipleUpload",
                 arguments: new QueryArguments(
                     new QueryArgument<ListGraphType<UploadGraphType>> { Name = "files" }),
-                resolve: context =>
+                resolve: async context =>
                 {
                     var files = context.GetArgument<IEnumerable<IFormFile>>("files");
-                    return Task.WhenAll(files.Select(file => uploads.Save(file)));
+                    return await Task.WhenAll(files.Select(file => uploads.Save(file)));
                 });
         }
     }

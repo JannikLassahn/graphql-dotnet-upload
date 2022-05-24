@@ -102,7 +102,7 @@ namespace GraphQL.Upload.AspNetCore
                     options.Schema = schema;
                     options.Query = request.Query;
                     options.OperationName = request.OperationName;
-                    options.Extensions = request.GetInputs();
+                    options.Variables = request.GetInputs();
                     options.UserContext = _options.UserContextFactory?.Invoke(context);
                     options.RequestServices = context.RequestServices;
                     foreach (var listener in context.RequestServices.GetRequiredService<IEnumerable<IDocumentExecutionListener>>())
