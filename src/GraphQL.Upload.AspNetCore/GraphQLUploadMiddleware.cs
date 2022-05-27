@@ -95,6 +95,9 @@ namespace GraphQL.Upload.AspNetCore
             var executer = context.RequestServices.GetRequiredService<IDocumentExecuter>();
             var schema = context.RequestServices.GetRequiredService<TSchema>();
 
+            var userContext = await getUserContext(context);
+            var listeners = context.RequestServices.GetRequiredService<IEnumerable<IDocumentExecutionListener>>().ToList();
+
             var results = await Task.WhenAll(
                 requests.Select(request => executer.ExecuteAsync(options =>
                 {
@@ -103,9 +106,9 @@ namespace GraphQL.Upload.AspNetCore
                     options.Query = request.Query;
                     options.OperationName = request.OperationName;
                     options.Variables = request.GetInputs();
-                    options.UserContext = _options.UserContextFactory?.Invoke(context);
+                    options.UserContext = userContext;
                     options.RequestServices = context.RequestServices;
-                    foreach (var listener in context.RequestServices.GetRequiredService<IEnumerable<IDocumentExecutionListener>>())
+                    foreach (var listener in listeners)
                     {
                         options.Listeners.Add(listener);
                     }
@@ -264,6 +267,17 @@ namespace GraphQL.Upload.AspNetCore
             }
 
             return (requests, null);
+        }
+
+        private Task<IDictionary<string, object>> getUserContext(HttpContext context)
+        {
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            return _options?.UserContextFactory?.Invoke(context) ??
+                   Task.FromResult((IDictionary<string, object>)new Dictionary<string, object>());
         }
     }
 }
