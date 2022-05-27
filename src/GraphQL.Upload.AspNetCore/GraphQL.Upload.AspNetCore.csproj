@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net5.0;netcoreapp3.1;netcoreapp3.0;netstandard2.0</TargetFrameworks>
-    <Version>2.0.0</Version>
+    <TargetFrameworks>net6.0;net5.0;netcoreapp3.1;netcoreapp3.0;netstandard2.0</TargetFrameworks>
+    <Version>3.0.0</Version>
     <Authors>Jannik Lassahn</Authors>
     <Company />
     <RepositoryUrl>https://github.com/JannikLassahn/graphql-dotnet-upload</RepositoryUrl>
@@ -10,6 +10,7 @@
     <PackageProjectUrl>https://github.com/JannikLassahn/graphql-dotnet-upload</PackageProjectUrl>
     <Description>Middleware and an Upload scalar to add support for GraphQL multipart requests for ASP.NET Core</Description>
     <PackageTags>ASP.NET Core, GraphQL, File Upload</PackageTags>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>

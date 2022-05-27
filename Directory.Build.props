@@ -1,7 +1,7 @@
 <Project>
 
     <Choose>
-        <When Condition="$(TargetFramework.StartsWith('netcoreapp3.')) Or $(TargetFramework.StartsWith('net5'))">
+        <When Condition="$(TargetFramework.StartsWith('netcoreapp3.')) Or $(TargetFramework.StartsWith('net5')) Or $(TargetFramework.StartsWith('net6'))">
             <PropertyGroup>
                 <IsNetCore3OnwardsTarget>True</IsNetCore3OnwardsTarget>
             </PropertyGroup>
