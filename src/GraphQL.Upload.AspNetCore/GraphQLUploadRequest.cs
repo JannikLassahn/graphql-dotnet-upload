@@ -3,7 +3,8 @@ using System.Linq;
 
 #if IS_NET_CORE_3_ONWARDS_TARGET
 using System.Text.Json.Serialization;
-using System.Text.Json;
+using GraphQL.SystemTextJson;
+
 #else
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -33,7 +34,8 @@ namespace GraphQL.Upload.AspNetCore
 
 #if IS_NET_CORE_3_ONWARDS_TARGET
         [JsonPropertyName(GraphQLUploadRequest.VARIABLES_KEY)]
-        public Dictionary<string, object> Variables { get; set; }
+        [JsonConverter(typeof(InputsJsonConverter))]
+        public Inputs Variables { get; set; }
 #else
         [JsonProperty(GraphQLUploadRequest.VARIABLES_KEY)]
         public JObject Variables { get; set; }
@@ -62,21 +64,22 @@ namespace GraphQL.Upload.AspNetCore
                     {
                         if (isLast)
                         {
+#if IS_NET_CORE_3_ONWARDS_TARGET
+                            var newInputs = ((Inputs)variableSection).ToDictionary(pair => pair.Key, pair => pair.Value);
+                            newInputs[key] = info.File;
+                            variables = new Inputs(newInputs);
+#else
                             ((Dictionary<string, object>)variableSection)[key] = info.File;
+#endif
                         }
                         else
                         {
-                            var variableDictionary = ((Dictionary<string, object>)variableSection);
 #if IS_NET_CORE_3_ONWARDS_TARGET
-                            if (variableDictionary[key] is JsonElement jsonElement)
-                            {
-                                var count = jsonElement.GetArrayLength();
-                                var list = Enumerable.Repeat((object)null, count).ToList();
-                                variableDictionary[key] = list;
-                            }
-#endif
+                            variableSection = ((Inputs)variableSection)[key];
+#else
 
-                            variableSection = variableDictionary[key];
+                            variableSection = ((Dictionary<string, object>)variableSection)[key];
+#endif
                         }
                     }
                     else if (part is int index)
@@ -92,8 +95,11 @@ namespace GraphQL.Upload.AspNetCore
                     }
                 }
             }
-
+#if IS_NET_CORE_3_ONWARDS_TARGET
+            return variables;
+#else
             return variables.ToInputs();
+#endif
         }
     }
 }
