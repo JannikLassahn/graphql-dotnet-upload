@@ -1,6 +1,4 @@
-﻿using System;
-using GraphQL.Types;
-using GraphQLParser.AST;
+﻿using GraphQL.Types;
 using Microsoft.AspNetCore.Http;
 
 namespace GraphQL.Upload.AspNetCore
@@ -15,7 +13,7 @@ namespace GraphQL.Upload.AspNetCore
 
         public override object ParseValue(object value)
         {
-            return value;
+            return value as IFormFile;
         }
     }
 }
