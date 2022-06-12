@@ -9,7 +9,6 @@ namespace GraphQL.Upload.AspNetCore
     public class GraphQLUploadRequestDeserializer
     {
         private readonly IGraphQLTextSerializer _graphQLTextSerializer;
-        private readonly JsonSerializerOptions _serializerOptions = new JsonSerializerOptions();
 
         public GraphQLUploadRequestDeserializer(IGraphQLTextSerializer graphQLTextSerializer)
         {
