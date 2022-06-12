@@ -1,18 +1,14 @@
-﻿using GraphQL.Types;
+﻿using GraphQL.SystemTextJson;
+using GraphQL.Types;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
-
-#if IS_NET_CORE_3_ONWARDS_TARGET
-using GraphQL.SystemTextJson;
-#else
-using GraphQL.NewtonsoftJson;
-#endif
 
 namespace GraphQL.Upload.AspNetCore.Tests
 {
@@ -26,7 +22,8 @@ namespace GraphQL.Upload.AspNetCore.Tests
                 .UseContentRoot(Path.GetDirectoryName(path))
                 .ConfigureServices(services =>
                     services.AddSingleton<IDocumentExecuter, DocumentExecuter>()
-                            .AddSingleton<IDocumentWriter, DocumentWriter>()
+                            .AddSingleton<IGraphQLTextSerializer, GraphQLSerializer>()
+                            .AddSingleton<IGraphQLSerializer, GraphQLSerializer>()
                             .AddSingleton<ISchema, TestSchema>()
                             .AddGraphQLUpload()
                 )

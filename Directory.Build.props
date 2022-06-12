@@ -1,27 +1,13 @@
 <Project>
 
-    <Choose>
-        <When Condition="$(TargetFramework.StartsWith('netcoreapp3.')) Or $(TargetFramework.StartsWith('net5'))">
-            <PropertyGroup>
-                <IsNetCore3OnwardsTarget>True</IsNetCore3OnwardsTarget>
-            </PropertyGroup>
-        </When>
-        <Otherwise>
-            <PropertyGroup>
-                <IsNetCore3OnwardsTarget>False</IsNetCore3OnwardsTarget>
-            </PropertyGroup>
-        </Otherwise>
-    </Choose>
-
     <PropertyGroup>
-        <GraphQLVersion>4.0.2</GraphQLVersion>
-        <GraphQLServerVersion>5.0.0</GraphQLServerVersion>
+        <GraphQLVersion>5.3.0</GraphQLVersion>
+        <GraphQLServerVersion>6.1.0</GraphQLServerVersion>
         <MicrosoftAspNetCoreHttpAbstractionsVersion>2.2.0</MicrosoftAspNetCoreHttpAbstractionsVersion>
-        <MicrosoftAspNetCoreHttpFeaturesVersion>3.1.2</MicrosoftAspNetCoreHttpFeaturesVersion>
-        <MicrosoftExtensionsLoggingVersion>3.1.2</MicrosoftExtensionsLoggingVersion>
-        <MicrosoftExtensionsOptionsVersion>3.1.2</MicrosoftExtensionsOptionsVersion>
+        <MicrosoftExtensionsLoggingVersion>6.0.0</MicrosoftExtensionsLoggingVersion>
+        <MicrosoftExtensionsOptionsVersion>6.0.0</MicrosoftExtensionsOptionsVersion>
         <XunitVersion>2.4.1</XunitVersion>
-        <XunitRunnerVisualStudioVersion>2.4.1</XunitRunnerVisualStudioVersion>
+        <XunitRunnerVisualStudioVersion>2.4.5</XunitRunnerVisualStudioVersion>
     </PropertyGroup>
 
 </Project>
