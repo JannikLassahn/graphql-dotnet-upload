@@ -45,7 +45,7 @@ namespace GraphQL.Upload.AspNetCore
             var httpRequest = context.Request;
             var httpResponse = context.Response;
 
-            var writer = context.RequestServices.GetRequiredService<IDocumentWriter>();
+            var serializer = context.RequestServices.GetRequiredService<IGraphQLTextSerializer>();
             var cancellationToken = GetCancellationToken(context);
 
             // GraphQL HTTP only supports GET and POST methods
@@ -53,7 +53,7 @@ namespace GraphQL.Upload.AspNetCore
             if (!isPost)
             {
                 httpResponse.Headers["Allow"] = "POST";
-                await WriteErrorResponseAsync(httpResponse, writer,
+                await WriteErrorResponseAsync(httpResponse, serializer,
                     $"Invalid HTTP method. Only POST are supported. {DOCS_URL}",
                     httpStatusCode: 405 // Method Not Allowed
                 );
@@ -74,21 +74,21 @@ namespace GraphQL.Upload.AspNetCore
             }
             catch(Exception exception)
             {
-                await WriteErrorResponseAsync(httpResponse, writer, $"{exception.Message} ${DOCS_URL}", statusCode);
+                await WriteErrorResponseAsync(httpResponse, serializer, $"{exception.Message} ${DOCS_URL}", statusCode);
                 return;
             }
 
             (files, error, statusCode) = GetFiles(form);
             if (error != null)
             {
-                await WriteErrorResponseAsync(httpResponse, writer, error, statusCode);
+                await WriteErrorResponseAsync(httpResponse, serializer, error, statusCode);
                 return;
             }
 
             (requests, error) = ExtractGraphQLRequests(uploadRequest, form);
-            if(error != null)
+            if (error != null)
             {
-                await WriteErrorResponseAsync(httpResponse, writer, error, statusCode);
+                await WriteErrorResponseAsync(httpResponse, serializer, error, statusCode);
                 return;
             }
 
@@ -102,7 +102,7 @@ namespace GraphQL.Upload.AspNetCore
                     options.Schema = schema;
                     options.Query = request.Query;
                     options.OperationName = request.OperationName;
-                    options.Inputs = request.GetInputs();
+                    options.Variables = request.GetVariables();
                     options.UserContext = _options.UserContextFactory?.Invoke(context);
                     options.RequestServices = context.RequestServices;
                     foreach (var listener in context.RequestServices.GetRequiredService<IEnumerable<IDocumentExecutionListener>>())
@@ -111,7 +111,7 @@ namespace GraphQL.Upload.AspNetCore
                     }
                 })));
 
-            await WriteResponseAsync(context, writer, results);
+            await WriteResponseAsync(context, serializer, results);
         }
 
         protected virtual CancellationToken GetCancellationToken(HttpContext context) => context.RequestAborted;
@@ -184,7 +184,7 @@ namespace GraphQL.Upload.AspNetCore
             return (form.Files, null, default);
         }
 
-        private Task WriteErrorResponseAsync(HttpResponse httpResponse, IDocumentWriter writer,
+        private Task WriteErrorResponseAsync(HttpResponse httpResponse, IGraphQLTextSerializer serializer,
             string errorMessage, int httpStatusCode = 400 /* BadRequest */)
         {
             var result = new ExecutionResult
@@ -198,10 +198,10 @@ namespace GraphQL.Upload.AspNetCore
             httpResponse.ContentType = "application/json";
             httpResponse.StatusCode = httpStatusCode;
 
-            return writer.WriteAsync(httpResponse.Body, result);
+            return serializer.WriteAsync(httpResponse.Body, result);
         }
 
-        private async Task WriteResponseAsync(HttpContext context, IDocumentWriter writer, ExecutionResult[] results)
+        private async Task WriteResponseAsync(HttpContext context, IGraphQLTextSerializer serializer, ExecutionResult[] results)
         {
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = 200;
@@ -216,11 +216,11 @@ namespace GraphQL.Upload.AspNetCore
 
             if (results.Length == 1)
             {
-                await writer.WriteAsync(context.Response.Body, results[0]);
+                await serializer.WriteAsync(context.Response.Body, results[0]);
                 return;
             }
 
-            await writer.WriteAsync(context.Response.Body, results);
+            await serializer.WriteAsync(context.Response.Body, results);
         }
 
         private (List<GraphQLUploadRequest> requests, string error) ExtractGraphQLRequests(

@@ -1,6 +1,7 @@
-﻿using GraphQL.Server;
+﻿using GraphQL;
+using GraphQL.MicrosoftDI;
+using GraphQL.SystemTextJson;
 using GraphQL.Types;
-
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,9 +20,9 @@ namespace FileUploadSample
             services.AddSingleton<FileGraphType>();
 
             services.AddGraphQLUpload();
-            services.AddGraphQL()
+            services.AddGraphQL(builder => builder
                 .AddErrorInfoProvider(opt => opt.ExposeExceptionStackTrace = true)
-                .AddSystemTextJson();
+                .AddSystemTextJson());
 
             services.AddCors();
         }
