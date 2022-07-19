@@ -1,7 +1,5 @@
 ﻿using GraphQL.Types;
 using Microsoft.AspNetCore.Http;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace GraphQL.Upload.AspNetCore.Tests
 {

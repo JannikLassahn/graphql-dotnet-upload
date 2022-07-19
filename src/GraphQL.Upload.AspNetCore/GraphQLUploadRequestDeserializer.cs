@@ -1,7 +1,4 @@
 using Microsoft.AspNetCore.Http;
-using System;
-using System.Linq;
-using System.Collections.Generic;
 using System.Text.Json;
 
 namespace GraphQL.Upload.AspNetCore

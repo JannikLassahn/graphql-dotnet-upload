@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace GraphQL.Upload.AspNetCore
 {
     public class GraphQLUploadRequestDeserializationResult
