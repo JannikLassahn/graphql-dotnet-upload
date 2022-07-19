@@ -1,7 +1,6 @@
 ﻿using GraphQL.Types;
 using GraphQL.Upload.AspNetCore;
 using Microsoft.AspNetCore.Http;
-using System;
 
 namespace Microsoft.AspNetCore.Builder
 {

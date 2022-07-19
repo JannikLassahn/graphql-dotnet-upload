@@ -1,12 +1,6 @@
 ﻿using GraphQL;
 using GraphQL.Types;
 using GraphQL.Upload.AspNetCore;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace FileUploadSample
 {
