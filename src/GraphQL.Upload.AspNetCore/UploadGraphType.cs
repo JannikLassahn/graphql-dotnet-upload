@@ -11,9 +11,11 @@ namespace GraphQL.Upload.AspNetCore
             Description = "A meta type that represents a file upload.";
         }
 
-        public override object ParseValue(object value)
+        public override object ParseValue(object value) => value switch
         {
-            return value as IFormFile;
-        }
+            IFormFile _ => value,
+            null => null,
+            _ => ThrowValueConversionError(value)
+        };
     }
 }
