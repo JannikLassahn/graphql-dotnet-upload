@@ -9,8 +9,10 @@ namespace FileUploadSample
         public SampleSchema(IServiceProvider provider)
             : base(provider)
         {
-            Query = provider.GetRequiredService<Query>();
-            Mutation = provider.GetRequiredService<Mutation>();
+            var uploads = provider.GetRequiredService<UploadRepository>();
+
+            Query = new Query(uploads);
+            Mutation = new Mutation(uploads);
         }
     }
 
@@ -18,7 +20,8 @@ namespace FileUploadSample
     {
         public Query(UploadRepository uploads)
         {
-            Field<ListGraphType<FileGraphType>>("uploads", resolve: ctx => uploads.Files);
+            Field<ListGraphType<FileGraphType>>("uploads")
+                .Resolve(context => uploads.Files);
         }
     }
 
@@ -26,24 +29,20 @@ namespace FileUploadSample
     {
         public Mutation(UploadRepository uploads)
         {
-            Field<FileGraphType>(
-                "singleUpload",
-                arguments: new QueryArguments(
-                    new QueryArgument<UploadGraphType> { Name = "file" }),
-                resolve: context =>
+            Field<NonNullGraphType<FileGraphType>>("singleUpload")
+                .Argument<UploadGraphType>("file")
+                .ResolveAsync(async context =>
                 {
                     var file = context.GetArgument<IFormFile>("file");
-                    return uploads.Save(file);
+                    return await uploads.Save(file);
                 });
 
-            Field<ListGraphType<FileGraphType>>(
-                "multipleUpload",
-                arguments: new QueryArguments(
-                    new QueryArgument<ListGraphType<UploadGraphType>> { Name = "files" }),
-                resolve: context =>
+            Field<ListGraphType<FileGraphType>>("multipleUpload")
+                .Argument<ListGraphType<UploadGraphType>>("files")
+                .ResolveAsync(async context =>
                 {
                     var files = context.GetArgument<IEnumerable<IFormFile>>("files");
-                    return Task.WhenAll(files.Select(file => uploads.Save(file)));
+                    return await Task.WhenAll(files.Select(file => uploads.Save(file)));
                 });
         }
     }
@@ -61,7 +60,7 @@ namespace FileUploadSample
         public FileGraphType()
         {
             Field(f => f.Id).Name("id");
-            Field(f => f.Name).Name("filename");
+            Field(f => f.Name).Name("name");
             Field(f => f.MimeType).Name("mimetype");
             Field(f => f.Path).Name("path");
         }

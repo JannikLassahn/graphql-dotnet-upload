@@ -1,6 +1,4 @@
 ﻿using GraphQL;
-using GraphQL.MicrosoftDI;
-using GraphQL.SystemTextJson;
 using GraphQL.Types;
 
 namespace FileUploadSample
@@ -10,15 +8,12 @@ namespace FileUploadSample
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<UploadRepository>();
-
             services.AddSingleton<ISchema, SampleSchema>();
-            services.AddSingleton<Query>();
-            services.AddSingleton<Mutation>();
-            services.AddSingleton<FileGraphType>();
 
             services.AddGraphQLUpload();
-            services.AddGraphQL(builder => builder
-                .AddErrorInfoProvider(opt => opt.ExposeExceptionStackTrace = true)
+            services.AddGraphQL(builder => builder        
+                .AddGraphTypes()
+                .AddErrorInfoProvider(opt => opt.ExposeExceptionDetails = true)
                 .AddSystemTextJson());
 
             services.AddCors();
