@@ -27,8 +27,8 @@ namespace GraphQL.Upload.AspNetCore
 
         public async Task InvokeAsync(HttpContext context)
         {
-            if (!context.Request.HasFormContentType                 
-                || !context.Request.Path.StartsWithSegments( _graphQLPath ))
+            if (!context.Request.HasFormContentType
+                || !context.Request.Path.StartsWithSegments(_graphQLPath))
             {
                 // not graphql path, eg. Form Authentication, skip this middleware
                 await _next(context);
@@ -67,7 +67,7 @@ namespace GraphQL.Upload.AspNetCore
             {
                 uploadRequest = _requestDeserializer.DeserializeFromFormCollection(form);
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 await WriteErrorResponseAsync(httpResponse, serializer, $"{exception.Message} ${DOCS_URL}", statusCode);
                 return;
@@ -99,7 +99,10 @@ namespace GraphQL.Upload.AspNetCore
                     options.OperationName = request.OperationName;
                     options.Variables = request.GetVariables();
                     options.User = context.User;
-                    options.UserContext = _options.UserContextFactory?.Invoke(context);
+                    if (_options.UserContextFactory != null)
+                    {
+                        options.UserContext = _options.UserContextFactory.Invoke(context);
+                    }
                     options.RequestServices = context.RequestServices;
                     foreach (var listener in context.RequestServices.GetRequiredService<IEnumerable<IDocumentExecutionListener>>())
                     {
@@ -202,7 +205,7 @@ namespace GraphQL.Upload.AspNetCore
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = 200;
 
-            foreach(var result in results)
+            foreach (var result in results)
             {
                 if (result.Errors != null)
                 {
