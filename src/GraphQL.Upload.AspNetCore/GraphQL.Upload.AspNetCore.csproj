@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;</TargetFrameworks>
-    <Version>3.0.2</Version>
+    <Version>3.0.3</Version>
     <Authors>Jannik Lassahn</Authors>
     <Company />
     <RepositoryUrl>https://github.com/JannikLassahn/graphql-dotnet-upload</RepositoryUrl>
