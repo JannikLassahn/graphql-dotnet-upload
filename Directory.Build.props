@@ -3,11 +3,12 @@
     <PropertyGroup>
         <LangVersion>latest</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
     </PropertyGroup>
 
     <PropertyGroup>
-        <GraphQLVersion>7.1.1</GraphQLVersion>
-        <GraphQLServerVersion>7.1.1</GraphQLServerVersion>
+        <GraphQLVersion>7.6.0</GraphQLVersion>
+        <GraphQLServerVersion>7.6.0</GraphQLServerVersion>
         <MicrosoftAspNetCoreHttpAbstractionsVersion>2.2.0</MicrosoftAspNetCoreHttpAbstractionsVersion>
         <MicrosoftExtensionsLoggingVersion>6.0.0</MicrosoftExtensionsLoggingVersion>
         <MicrosoftExtensionsOptionsVersion>6.0.0</MicrosoftExtensionsOptionsVersion>

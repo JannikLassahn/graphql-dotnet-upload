@@ -8,11 +8,11 @@ namespace FileUploadSample
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<UploadRepository>();
-            services.AddSingleton<ISchema, SampleSchema>();
 
-            services.AddGraphQLUpload();
-            services.AddGraphQL(builder => builder        
+            services.AddGraphQL(builder => builder
+                .AddSchema<SampleSchema>()
                 .AddGraphTypes()
+                .AddGraphQLUpload()
                 .AddErrorInfoProvider(opt => opt.ExposeExceptionDetails = true)
                 .AddSystemTextJson());
 

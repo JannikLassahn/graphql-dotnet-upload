@@ -20,15 +20,15 @@ This middleware implementation **only** parses multipart requests. That's why we
 ```csharp
 public void ConfigureServices(IServiceCollection services)
 {
-  services.AddSingleton<MySchema>()
-          .AddGraphQLUpload()
-          .AddGraphQL();
+    services.AddGraphQL(b => b
+        .AddSchema<MySchema>()
+        .AddSystemTextJson()
+        .AddGraphQLUpload());
 }
 
 public void Configure(IApplicationBuilder app)
 {
-  app.UseGraphQLUpload<MySchema>()
-     .UseGraphQL<MySchema>();
+    app.UseGraphQLUpload<MySchema>();
 }
 ```
 
