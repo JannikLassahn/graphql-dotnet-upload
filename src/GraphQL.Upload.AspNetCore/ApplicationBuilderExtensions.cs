@@ -38,4 +38,12 @@ public static class ApplicationBuilderExtensions
 
         return builder.UseGraphQL<GraphQLUploadMiddleware<TSchema>>(path, options);
     }
+
+    /// <inheritdoc cref="UseGraphQLUpload{TSchema}(IApplicationBuilder, string, Action{GraphQLUploadOptions}?)"/>
+    public static IApplicationBuilder UseGraphQLUpload(this IApplicationBuilder builder, string path = "/graphql", Action<GraphQLUploadOptions>? configureOptions = null)
+        => UseGraphQLUpload<ISchema>(builder, path, configureOptions);
+
+    /// <inheritdoc cref="UseGraphQLUpload{TSchema}(IApplicationBuilder, PathString, Action{GraphQLUploadOptions}?)"/>
+    public static IApplicationBuilder UseGraphQLUpload(this IApplicationBuilder builder, PathString path, Action<GraphQLUploadOptions>? configureOptions = null)
+        => UseGraphQLUpload<ISchema>(builder, path, configureOptions);
 }
