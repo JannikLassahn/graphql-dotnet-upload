@@ -7,13 +7,18 @@
     <Company />
     <RepositoryUrl>https://github.com/JannikLassahn/graphql-dotnet-upload</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageProjectUrl>https://github.com/JannikLassahn/graphql-dotnet-upload</PackageProjectUrl>
     <Description>Middleware and an Upload scalar to add support for GraphQL multipart requests for ASP.NET Core</Description>
     <PackageTags>ASP.NET Core, GraphQL, File Upload</PackageTags>
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="GraphQL.Server.Transports.AspNetCore" Version="$(GraphQLServerVersion)" />
+	<None Include="..\..\README.md" Pack="true" PackagePath="\" Visible="false" />
+	<None Include="..\..\LICENSE" Pack="true" PackagePath="\" Visible="false" />
+	<PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>
