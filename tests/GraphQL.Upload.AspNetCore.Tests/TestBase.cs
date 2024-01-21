@@ -12,21 +12,20 @@ namespace GraphQL.Upload.AspNetCore.Tests
 {
     public abstract class TestBase
     {
-        public TestServer CreateServer(GraphQLUploadOptions options = null)
+        public TestServer CreateServer(Action<GraphQLUploadOptions>? options = null)
         {
-            var path = Assembly.GetAssembly(typeof(TestBase)).Location;
+            var path = Assembly.GetCallingAssembly().Location;
 
             var hostBuilder = new WebHostBuilder()
-                .UseContentRoot(Path.GetDirectoryName(path))
+                .UseContentRoot(Path.GetDirectoryName(path)!)
                 .ConfigureServices(services =>
-                    services.AddSingleton<IDocumentExecuter, DocumentExecuter>()
-                            .AddSingleton<IGraphQLTextSerializer, GraphQLSerializer>()
-                            .AddSingleton<IGraphQLSerializer, GraphQLSerializer>()
-                            .AddSingleton<ISchema, TestSchema>()
-                            .AddGraphQLUpload()
+                    services.AddGraphQL(b => b
+                        .AddSchema<TestSchema>()
+                        .AddSystemTextJson()
+                        .AddGraphQLUpload())
                 )
                 .Configure(app =>
-                    app.UseGraphQLUpload<ISchema>("/graphql", options ?? new GraphQLUploadOptions())
+                    app.UseGraphQLUpload<ISchema>("/graphql", options)
                 );
 
             return new TestServer(hostBuilder);

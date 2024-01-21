@@ -16,19 +16,20 @@ Preview versions from the develop branch are available via [GitHub Packages](htt
 
 Register the middleware in your Startup.cs.
 
-This middleware implementation **only** parses multipart requests. That's why we're using additional middleware ([graphql-dotnet/server](https://github.com/graphql-dotnet/server)) to handle other request types.
+This middleware inherits from `GraphQLHttpMiddleware` and as such supports all of the base functionality provied by `GraphQL.Server.Transports.AspNetCore`.
+
 ```csharp
 public void ConfigureServices(IServiceCollection services)
 {
-  services.AddSingleton<MySchema>()
-          .AddGraphQLUpload()
-          .AddGraphQL();
+    services.AddGraphQL(b => b
+        .AddSchema<MySchema>()
+        .AddSystemTextJson()
+        .AddGraphQLUpload());
 }
 
 public void Configure(IApplicationBuilder app)
 {
-  app.UseGraphQLUpload<MySchema>()
-     .UseGraphQL<MySchema>();
+    app.UseGraphQLUpload();
 }
 ```
 

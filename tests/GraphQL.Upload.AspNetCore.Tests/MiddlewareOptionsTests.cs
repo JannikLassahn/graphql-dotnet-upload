@@ -20,12 +20,7 @@ namespace GraphQL.Upload.AspNetCore.Tests
                 { fileA, "0", "a.txt" }
             };
 
-            var options = new GraphQLUploadOptions
-            {
-                MaximumFileCount = 0
-            };
-
-            using (var server = CreateServer(options))
+            using (var server = CreateServer(options => options.MaximumFileCount = 0))
             {
                 // Act
                 var client = server.CreateClient();
@@ -54,12 +49,7 @@ namespace GraphQL.Upload.AspNetCore.Tests
                 { fileB, "1", "b.txt" }
             };
 
-            var options = new GraphQLUploadOptions
-            {
-                MaximumFileSize = 2
-            };
-
-            using (var server = CreateServer(options))
+            using (var server = CreateServer(options => options.MaximumFileSize = 2))
             {
                 // Act
                 var client = server.CreateClient();
